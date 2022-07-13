@@ -23,6 +23,16 @@ public class RoamGravity : MonoBehaviour
     [Tooltip("This makes holding left and right sweep the launch angle faster")]
     public float AngleSensitivity = 1f;
 
+    [Tooltip("This affects how fast the ship oscillates between min and max launch power")]
+    public float LaunchSweepPeriod = 1;
+    [Tooltip("This affects how hard the ship is launched before being scaled by the charge")]
+    public float LaunchForceScale = 1;
+
+    public bool DebugMode = false;
+    public float DebugKnock = 1;
+
+    private GameObject _nearestBody;
+
     private Rigidbody2D _rb;
     [SerializeField] private LayerMask _layerMask;
 
@@ -35,6 +45,10 @@ public class RoamGravity : MonoBehaviour
     void Start()
     {
         _rb = GetComponent<Rigidbody2D>();
+        if (DebugMode)
+        {
+            _rb.AddForce(Vector2.up * DebugKnock, ForceMode2D.Impulse);
+        }
     }
 
     //can use an Enum and a switch to make this elegant
@@ -44,7 +58,7 @@ public class RoamGravity : MonoBehaviour
         if (Launching)
         {
             //handle launch button and behavior
-            _currentLaunchAngle = handleLaunchAngle(_currentLaunchAngle);
+            _currentLaunchAngle = updateLaunchingAngle(_currentLaunchAngle);
             //handle a launch
             handleLaunch();
         }
@@ -85,7 +99,22 @@ public class RoamGravity : MonoBehaviour
         return forcesSum;
     }
 
-    private float handleLaunchAngle(float currentAngle)
+    //zero the ship's velocity, set up an initial exit angle, and prep to launch
+    private void PrepLaunch()
+    {
+        Zeroed = true;
+        _rb.velocity = Vector2.zero;
+        Planet nearest = Planet.FindNearest(transform.position);
+        if(nearest == null)
+        {
+            Debug.LogError("No Planet found nearby. Do you have your planets marked with the appropriate script?");
+        }
+        //obtain the line between the closest planet and 
+        var initialVector2 = Vector2.Perpendicular(Planet.FindNearest(transform.position).position - transform.position);
+        _currentLaunchAngle = Mathf.Acos(initialVector2.x * Mathf.Rad2Deg * ((initialVector2.x < 0) ? -1 : 1));
+    }
+
+    private float updateLaunchingAngle(float currentAngle)
     {
         var L = Input.GetKey(KeyCode.A);
         var R = Input.GetKey(KeyCode.D);
@@ -112,6 +141,8 @@ public class RoamGravity : MonoBehaviour
         } else if (Input.GetKeyUp(KeyCode.Space))
         {
             //launch the craft
+            _rb.AddForce(UtilFunctions.DegreeToVector2(_currentLaunchAngle), ForceMode2D.Impulse);
+            Launching = false;
         }
     }
 }

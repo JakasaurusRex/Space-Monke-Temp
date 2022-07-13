@@ -348,7 +348,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!50 &595049836
 Rigidbody2D:
   serializedVersion: 4
@@ -673,6 +673,10 @@ MonoBehaviour:
   BodyRange: 5
   ShipMass: 100
   AngleSensitivity: 1
+  LaunchSweepPeriod: 1
+  LaunchForceScale: 1
+  DebugMode: 1
+  DebugKnock: 1.1
   _layerMask:
     serializedVersion: 2
     m_Bits: 64
@@ -811,7 +815,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!50 &2000298757
 Rigidbody2D:
   serializedVersion: 4
