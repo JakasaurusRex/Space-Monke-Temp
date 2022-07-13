@@ -66,6 +66,10 @@ public class RoamGravity : MonoBehaviour
             Debug.DrawLine(Planet.FindNearest(transform.position).position, transform.position);
 
         }
+        
+        //Update the origin of the trajectory marker each frame
+        lr.SetPosition(0, transform.position);
+
         //if trying to leave orbit, catch input for launch angle adjustment
         if (Launching)
         {
@@ -83,7 +87,7 @@ public class RoamGravity : MonoBehaviour
                 Debug.Log("Current Launching Angle: " + _currentLaunchAngle);
             }
             //handle a launch
-            handleLaunch();
+            HandleLaunch();
         }
         //if not trying to launch, then tick gravity system
         else if (Active && !Zeroed)
@@ -140,11 +144,11 @@ public class RoamGravity : MonoBehaviour
         {
             Debug.DrawRay(transform.position, initialVector2, Color.white, 5);
         }
-        var desiredVector2 = initialVector2 - (Vector2)(transform.position);
+
         //line between ship and planet
-        float vectorAngle = Mathf.Acos(Mathf.Deg2Rad * desiredVector2.x);
+        float vectorAngle = Mathf.Acos(Mathf.Deg2Rad * initialVector2.normalized.x);
         vectorAngle *= Mathf.Rad2Deg;
-        if(desiredVector2.x < 0)
+        if(initialVector2.x > 0)
         {
             vectorAngle *= -1;
         }
@@ -173,7 +177,7 @@ public class RoamGravity : MonoBehaviour
         }
     }
 
-    private void handleLaunch()
+    private void HandleLaunch()
     {
         Zeroed = true;
         if (Input.GetKey(KeyCode.Space))
@@ -181,16 +185,16 @@ public class RoamGravity : MonoBehaviour
             _launchPowerLine.SetActive(true);
             Vector2 pos = transform.position;
             //lerp the power back and forth between low and high
-            lr.SetPosition(1, pos + (UtilFunctions.DegreeToVector2(_currentLaunchAngle) * LaunchForceScale * Mathf.Sin(Time.time)));
+            lr.SetPosition(1, pos + (LaunchForceScale * (Mathf.Sin(Time.time * LaunchSweepPeriod)+1) * UtilFunctions.DegreeToVector2(_currentLaunchAngle)));
         } else if (Input.GetKeyUp(KeyCode.Space))
         {
             //launch the craft
-            _rb.AddForce(UtilFunctions.DegreeToVector2(_currentLaunchAngle), ForceMode2D.Impulse);
+            _rb.AddForce(UtilFunctions.DegreeToVector2(_currentLaunchAngle) * LaunchForceScale, ForceMode2D.Impulse);
             //we are launched, no longer launching, and we are no longer prepped for a launch
             Launching = false;
+            Zeroed = false;
             prepped = false;
             _launchPowerLine.SetActive(false);
-            Destroy(_launchPowerLine);
         }
     }
 
