@@ -3,7 +3,6 @@ using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
 [RequireComponent(typeof(Rigidbody2D))]
-
 public class RoamGravity : MonoBehaviour
 {
     private static readonly float Gravity = 6.67430f * Mathf.Pow(10, -11);
@@ -25,9 +24,12 @@ public class RoamGravity : MonoBehaviour
 
     [Tooltip("This affects how fast the ship oscillates between min and max launch power")]
     public float LaunchSweepPeriod = 1;
-    [Tooltip("This affects how hard the ship is launched before being scaled by the charge")]
+    [Tooltip("This affects how hard the ship is launched before being scaled by the charge, also affects charge line size")]
     public float LaunchForceScale = 1;
+    public Material lineMaterial;
 
+    [Tooltip("Width of indicator lines")]
+    public float LineWidth = .1f;
     public bool DebugMode = false;
     public float DebugKnock = 1;
 
@@ -36,6 +38,9 @@ public class RoamGravity : MonoBehaviour
     private Rigidbody2D _rb;
     [SerializeField] private LayerMask _layerMask;
 
+    private GameObject _launchPowerLine;
+    private LineRenderer lr;
+    private bool prepped = false;
 
     void OnDrawGizmosSelected()
     {
@@ -44,6 +49,8 @@ public class RoamGravity : MonoBehaviour
 
     void Start()
     {
+        SetupLine(Color.blue, LaunchForceScale, LineWidth, lineMaterial);
+        _launchPowerLine.SetActive(false);
         _rb = GetComponent<Rigidbody2D>();
         if (DebugMode)
         {
@@ -54,21 +61,39 @@ public class RoamGravity : MonoBehaviour
     //can use an Enum and a switch to make this elegant
     void Update()
     {
-        //catch input for launch angle adjustment
+        if (DebugMode)
+        {
+            Debug.DrawLine(Planet.FindNearest(transform.position).position, transform.position);
+
+        }
+        //if trying to leave orbit, catch input for launch angle adjustment
         if (Launching)
         {
             //handle launch button and behavior
+            if (!prepped)
+            {
+                PrepLaunch();
+                prepped = true;
+            }
+
+            float lastLaunchAngle = _currentLaunchAngle;
             _currentLaunchAngle = updateLaunchingAngle(_currentLaunchAngle);
+            if (_currentLaunchAngle != lastLaunchAngle)
+            {
+                Debug.Log("Current Launching Angle: " + _currentLaunchAngle);
+            }
             //handle a launch
             handleLaunch();
         }
-        else if (Zeroed)
-        {
-            _rb.velocity = Vector2.zero;
-        }
-        else if (Active)
+        //if not trying to launch, then tick gravity system
+        else if (Active && !Zeroed)
         {
             _rb.AddForce(CalculateForces(), ForceMode2D.Impulse);
+        }
+        //freeze the ship if zeroed
+        if (Zeroed)
+        {
+            _rb.velocity = Vector2.zero;
         }
     }
 
@@ -89,7 +114,7 @@ public class RoamGravity : MonoBehaviour
             Vector2 heading = cl.transform.position - transform.position;
 
             //GMM / R^2 equation for universal gravitation
-            var force = ((GravityTweak * Gravity * ShipMass * cl.GetComponent<Rigidbody2D>().mass) / distanceSquared) * (Time.deltaTime);
+            var force = ((GravityTweak * Gravity * ShipMass * cl.GetComponent<Rigidbody2D>().mass) / distanceSquared) * Time.deltaTime;
 
             //Normalization
             forcesSum += (force * (heading / heading.magnitude));
@@ -102,23 +127,38 @@ public class RoamGravity : MonoBehaviour
     //zero the ship's velocity, set up an initial exit angle, and prep to launch
     private void PrepLaunch()
     {
+        Debug.Log("Prepping for launch...");
         Zeroed = true;
-        _rb.velocity = Vector2.zero;
         Planet nearest = Planet.FindNearest(transform.position);
         if(nearest == null)
         {
             Debug.LogError("No Planet found nearby. Do you have your planets marked with the appropriate script?");
         }
-        //obtain the line between the closest planet and 
+        //get a vector somewhat tangent to the orbit
         var initialVector2 = Vector2.Perpendicular(Planet.FindNearest(transform.position).position - transform.position);
-        _currentLaunchAngle = Mathf.Acos(initialVector2.x * Mathf.Rad2Deg * ((initialVector2.x < 0) ? -1 : 1));
+        if (DebugMode)
+        {
+            Debug.DrawRay(transform.position, initialVector2, Color.white, 5);
+        }
+        var desiredVector2 = initialVector2 - (Vector2)(transform.position);
+        //line between ship and planet
+        float vectorAngle = Mathf.Acos(Mathf.Deg2Rad * desiredVector2.x);
+        vectorAngle *= Mathf.Rad2Deg;
+        if(desiredVector2.x < 0)
+        {
+            vectorAngle *= -1;
+        }
+
+        _currentLaunchAngle = vectorAngle;
+        Debug.Log("Calculated launch angle in Prep: " + _currentLaunchAngle);
     }
+
 
     private float updateLaunchingAngle(float currentAngle)
     {
+        Debug.Log("Updating Launch Angle");
         var L = Input.GetKey(KeyCode.A);
         var R = Input.GetKey(KeyCode.D);
-
         //ignore both and neither keys pressed
         if ((L && R) || (!L && !R))
         {
@@ -128,21 +168,44 @@ public class RoamGravity : MonoBehaviour
         else
         {
             //if A is held, sweep left, if D is held, sweep right
+            Debug.Log("Current angle: " + currentAngle);
             return currentAngle + (L ? -1 : 1) * Time.deltaTime * AngleSensitivity;
         }
     }
 
     private void handleLaunch()
     {
+        Zeroed = true;
         if (Input.GetKey(KeyCode.Space))
         {
+            _launchPowerLine.SetActive(true);
+            Vector2 pos = transform.position;
             //lerp the power back and forth between low and high
-
+            lr.SetPosition(1, pos + (UtilFunctions.DegreeToVector2(_currentLaunchAngle) * LaunchForceScale * Mathf.Sin(Time.time)));
         } else if (Input.GetKeyUp(KeyCode.Space))
         {
             //launch the craft
             _rb.AddForce(UtilFunctions.DegreeToVector2(_currentLaunchAngle), ForceMode2D.Impulse);
+            //we are launched, no longer launching, and we are no longer prepped for a launch
             Launching = false;
+            prepped = false;
+            _launchPowerLine.SetActive(false);
+            Destroy(_launchPowerLine);
         }
     }
+
+
+    //to manipulate the end of this line, just update the position of the first vertex
+    void SetupLine(Color color, float scaling, float width, Material mat)
+    {
+        _launchPowerLine = new GameObject();
+        _launchPowerLine.transform.position = transform.position;
+        lr = _launchPowerLine.AddComponent<LineRenderer>();
+        lr.material = mat;
+        lr.startColor = lr.endColor = color;
+        lr.startWidth = lr.endWidth = width;
+        lr.SetPosition(0, transform.position);
+        lr.SetPosition(1, UtilFunctions.DegreeToVector2(_currentLaunchAngle) * scaling);
+    }
+
 }
