@@ -89,7 +89,7 @@ public class RoamGravity : MonoBehaviour
             Vector2 heading = cl.transform.position - transform.position;
 
             //GMM / R^2 equation for universal gravitation
-            var force = (GravityTweak * Gravity * ShipMass * cl.GetComponent<Rigidbody2D>().mass) / distanceSquared;
+            var force = ((GravityTweak * Gravity * ShipMass * cl.GetComponent<Rigidbody2D>().mass) / distanceSquared) * (Time.deltaTime);
 
             //Normalization
             forcesSum += (force * (heading / heading.magnitude));
