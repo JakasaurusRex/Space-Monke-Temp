@@ -41,7 +41,7 @@ public class RoamGravity : MonoBehaviour
     private GameObject _launchPowerLine;
     private LineRenderer lr;
     private bool prepped = false;
-
+    Vector2 destinationVector = Vector2.zero;
     void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(transform.position, BodyRange);
@@ -69,7 +69,6 @@ public class RoamGravity : MonoBehaviour
         
         //Update the origin of the trajectory marker each frame
         lr.SetPosition(0, transform.position);
-
         //if trying to leave orbit, catch input for launch angle adjustment
         if (Launching)
         {
@@ -78,6 +77,8 @@ public class RoamGravity : MonoBehaviour
             {
                 PrepLaunch();
                 prepped = true;
+                lr.SetPosition(1, destinationVector);
+
             }
 
             float lastLaunchAngle = _currentLaunchAngle;
@@ -133,22 +134,23 @@ public class RoamGravity : MonoBehaviour
     {
         Debug.Log("Prepping for launch...");
         Zeroed = true;
+        _launchPowerLine.SetActive(true);
         Planet nearest = Planet.FindNearest(transform.position);
-        if(nearest == null)
+        if (nearest == null)
         {
             Debug.LogError("No Planet found nearby. Do you have your planets marked with the appropriate script?");
         }
-        //get a vector somewhat tangent to the orbit
-        var initialVector2 = Vector2.Perpendicular(Planet.FindNearest(transform.position).position - transform.position);
+        //get a vector tangent to the orbit
+        destinationVector = Vector2.Perpendicular(Planet.FindNearest(transform.position).position - transform.position);
         if (DebugMode)
         {
-            Debug.DrawRay(transform.position, initialVector2, Color.white, 5);
+            Debug.DrawRay(transform.position, destinationVector, Color.white, 5);
         }
 
         //line between ship and planet
-        float vectorAngle = Mathf.Acos(Mathf.Deg2Rad * initialVector2.normalized.x);
+        float vectorAngle = Mathf.Acos(Mathf.Deg2Rad * destinationVector.normalized.x);
         vectorAngle *= Mathf.Rad2Deg;
-        if(initialVector2.x > 0)
+        if(destinationVector.x > 0)
         {
             vectorAngle *= -1;
         }
@@ -173,7 +175,9 @@ public class RoamGravity : MonoBehaviour
         {
             //if A is held, sweep left, if D is held, sweep right
             Debug.Log("Current angle: " + currentAngle);
-            return currentAngle + (L ? -1 : 1) * Time.deltaTime * AngleSensitivity;
+            var newAngle = currentAngle + (L ? 1 : -1) * Time.deltaTime * AngleSensitivity;
+            lr.SetPosition(1, (Vector2)(transform.position) + UtilFunctions.DegreeToVector2(newAngle) * LaunchForceScale);
+            return newAngle;
         }
     }
 
@@ -182,10 +186,13 @@ public class RoamGravity : MonoBehaviour
         Zeroed = true;
         if (Input.GetKey(KeyCode.Space))
         {
-            _launchPowerLine.SetActive(true);
-            Vector2 pos = transform.position;
             //lerp the power back and forth between low and high
-            lr.SetPosition(1, pos + (LaunchForceScale * (Mathf.Sin(Time.time * LaunchSweepPeriod)+1) * UtilFunctions.DegreeToVector2(_currentLaunchAngle)));
+            //sin function from 0-1
+            var wave = Mathf.Sin(Time.time * LaunchSweepPeriod) + 1;
+            var myPos = (Vector2)(transform.position);
+            var directionVector = UtilFunctions.DegreeToVector2(_currentLaunchAngle);
+            lr.SetPosition(1, (LaunchForceScale * wave * directionVector) + myPos);
+
         } else if (Input.GetKeyUp(KeyCode.Space))
         {
             //launch the craft
