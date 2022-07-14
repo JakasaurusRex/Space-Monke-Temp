@@ -139,6 +139,12 @@ public class RoamGravity : MonoBehaviour
 
         //line between ship and planet
         float vectorAngle = Vector2.Angle(Vector2.right, directionVector);
+        //if you are to the left of the planet, flip your heading to account for 2 quadrant nature of Vector2.Angle
+        if(Planet.FindNearest(transform.position).position.x < transform.position.x)
+        {
+            Debug.Log("Correcting Angle defined in 2 quadrants");
+            vectorAngle = 360 - vectorAngle;
+        }
         _currentLaunchAngle = vectorAngle;
         Debug.Log("Calculated launch angle in Prep: " + _currentLaunchAngle);
     }
