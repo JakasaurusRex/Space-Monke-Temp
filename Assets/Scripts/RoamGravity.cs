@@ -31,21 +31,24 @@ public class RoamGravity : MonoBehaviour
     public float LineWidth = .1f;
     [Tooltip("Indicator Line Length for Launches")]
     public float IndicatorLength = 5;
+    [Tooltip("Which layers count as planets")]
+    [SerializeField] private LayerMask _layerMask;
+    [Tooltip("Below this distance two vectors will be considered equal")]
+    [SerializeField] private float zeroFudgeFactor = .001f;
+    [Tooltip("Tune how sensitive the face direction of movement behavior appears")]
+    public float turnSmoothTime = 0.1f;
 
     public bool DebugMode = false;
     public float DebugKnock = 1;
-
-    private GameObject _nearestBody;
-
     private Rigidbody2D _rb;
-    [SerializeField] private LayerMask _layerMask;
-
     private GameObject _launchPowerLine;
     private LineRenderer lr;
     private bool prepped = false;
     Vector2 directionVector = Vector2.zero;
     private Vector2 myPos;
     private Vector2 lastPos;
+    private float smoothVelocity;
+
     void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(transform.position, BodyRange);
@@ -80,19 +83,23 @@ public class RoamGravity : MonoBehaviour
             if (!prepped)
             {
                 PrepLaunch();
-                prepped =true;
+                prepped = true;
             }
 
             UpdateLaunchingAngle();
-            Debug.Log("Current Launching Angle: " + _currentLaunchAngle);
+            if (DebugMode)
+            {
+                Debug.Log("Current Launching Angle: " + _currentLaunchAngle);
+            }
             lr.SetPosition(1, (UtilFunctions.DegreeToVector2(_currentLaunchAngle) * IndicatorLength) + myPos);
-           
+
             //handle a launch
             HandleLaunch();
         }
         //if not trying to launch, then tick gravity system
         else if (Active && !Zeroed)
         {
+            FaceMovement();
             _rb.AddForce(CalculateForces(), ForceMode2D.Impulse);
         }
         //freeze the ship if zeroed
@@ -100,10 +107,26 @@ public class RoamGravity : MonoBehaviour
         {
             _rb.velocity = Vector2.zero;
         }
-        Debug.Log("posdif = " + (myPos-lastPos));
+        if (DebugMode)
+        {
+            Debug.Log("posdif = " + (myPos - lastPos));
+        }
         lastPos = myPos;
     }
 
+    void FaceMovement()
+    {
+        var velVector = myPos - lastPos;
+        if (DebugMode)
+        {
+                Debug.Log("Updating Bearing");
+        }
+        if(_rb.velocity.sqrMagnitude > zeroFudgeFactor)
+        {
+            transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(_rb.velocity.y, _rb.velocity.x) * Mathf.Rad2Deg - 90);
+        }
+    }
+    
     private Vector2 CalculateForces()
     {
         //GMM/R^2
@@ -132,6 +155,11 @@ public class RoamGravity : MonoBehaviour
 
         //get a vector tangent to velocity
         directionVector = _rb.velocity;
+        if (_rb.velocity.sqrMagnitude < zeroFudgeFactor)
+        {
+            Debug.Log("RB Vector considered 0 use simple tangent");
+            directionVector = (Vector2)transform.position - (Vector2)Planet.FindNearest(transform.position).position;
+        }
         if (DebugMode)
         {
             Debug.DrawRay(transform.position, directionVector, Color.green, 5);
@@ -140,13 +168,17 @@ public class RoamGravity : MonoBehaviour
         //line between ship and planet
         float vectorAngle = Vector2.Angle(Vector2.right, directionVector);
         //if you are to the left of the planet, flip your heading to account for 2 quadrant nature of Vector2.Angle
-        if(Planet.FindNearest(transform.position).position.x < transform.position.x)
+        if (Planet.FindNearest(transform.position).position.x < transform.position.x)
         {
-            Debug.Log("Correcting Angle defined in 2 quadrants");
+            Debug.Log("Correcting Angle");
             vectorAngle = 360 - vectorAngle;
         }
         _currentLaunchAngle = vectorAngle;
-        Debug.Log("Calculated launch angle in Prep: " + _currentLaunchAngle);
+        transform.rotation = (Quaternion.Euler(0, 0, _currentLaunchAngle - 90));
+        if (DebugMode)
+        {
+            Debug.Log("Calculated launch angle in Prep: " + _currentLaunchAngle);
+        }
     }
 
     private void UpdateLaunchingAngle()
@@ -165,6 +197,7 @@ public class RoamGravity : MonoBehaviour
             Debug.Log("Current angle: " + _currentLaunchAngle);
             var newAngle = _currentLaunchAngle + (L ? 1 : -1) * Time.deltaTime * AngleSensitivity;
             _currentLaunchAngle = newAngle;
+            transform.rotation = (Quaternion.Euler(0, 0, _currentLaunchAngle - 90));
         }
     }
 
@@ -185,9 +218,7 @@ public class RoamGravity : MonoBehaviour
             //launch the craft
             _rb.AddForce(UtilFunctions.DegreeToVector2(_currentLaunchAngle) * LaunchForceScale, ForceMode2D.Impulse);
             //go back to pre launch state and remove indicator
-            Launching = false;
-            Zeroed = false;
-            prepped = false;
+            Launching = Zeroed = prepped = false;
             _launchPowerLine.SetActive(false);
         }
     }
