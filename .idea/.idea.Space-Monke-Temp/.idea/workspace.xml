@@ -10,17 +10,24 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/Assets/Scripts/PlanetHealth.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/Shooting.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="IdeDocumentHistory">
     <changedPaths>
       <option value="$PROJECT_DIR$/Assets/Scripts/RoamGravity.cs" />
-      <option value="$PROJECT_DIR$/Assets/Scripts/Player.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/Shooting.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/DamagableObject.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/PlanetHealth.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/Player.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="2BsAN0ifgjVbzDKqf3XyYugSoo5" />
@@ -69,6 +76,7 @@
       <workItem from="1657684385483" duration="687000" />
       <workItem from="1657685590156" duration="925000" />
       <workItem from="1657779407952" duration="2473000" />
+      <workItem from="1658081905771" duration="4132000" />
     </task>
     <servers />
   </component>
