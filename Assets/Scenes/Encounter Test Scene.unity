@@ -220,7 +220,7 @@ GameObject:
   - component: {fileID: 1784798283}
   m_Layer: 0
   m_Name: Planet
-  m_TagString: Untagged
+  m_TagString: ProjectileSource
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -242,29 +242,31 @@ MonoBehaviour:
   - Name: Basic Attack
     Attacks:
     - AttackName: Many Missiles
-      AttackDelay: 0.05
+      AttackDelay: 0
       ProjectileIndex: 0
-      AttackNumber: 30
+      AttackNumber: 50
       Descriptor: Many Missiles
   - Name: Stronger Attacks
     Attacks:
     - AttackName: Many Missiles
       AttackDelay: 0.05
       ProjectileIndex: 0
-      AttackNumber: 30
+      AttackNumber: 0
       Descriptor: Many Missiles
   - Name: Strongest Attacks
     Attacks:
     - AttackName: Many Missiles
       AttackDelay: 0.05
       ProjectileIndex: 0
-      AttackNumber: 30
+      AttackNumber: 0
       Descriptor: Many Missiles
   dead: 0
-  spawnAngle: 180
+  spawnAngle: 120
+  spawnAngleOffset: 0
+  autoChooseOffset: 1
   difficultyTuner: 1
-  AttackCooldown: 1
-  spawnRadius: 15
+  AttackCooldown: 0.3
+  spawnRadius: 8.5
   randomness: 0.2
 --- !u!212 &1784798284
 SpriteRenderer:
@@ -326,12 +328,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1784798282}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -15, z: -1}
-  m_LocalScale: {x: 30, y: 30, z: 1}
+  m_LocalPosition: {x: 0, y: -8, z: -1}
+  m_LocalScale: {x: 15, y: 15, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1859466037
 GameObject:
@@ -364,7 +366,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Projectiles:
   - {fileID: 8329509143499132741, guid: e89466607c10b614abab72fe50804a46, type: 3}
-  amountToPool: 100
+  amountToPool: 300
 --- !u!4 &1859466039
 Transform:
   m_ObjectHideFlags: 0
@@ -378,5 +380,5 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

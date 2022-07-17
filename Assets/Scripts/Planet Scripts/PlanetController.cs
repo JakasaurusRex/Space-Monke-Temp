@@ -33,8 +33,12 @@ public class PlanetController : MonoBehaviour,DamagableObject {
     public bool dead;
 
     [Tooltip("Tweak this to fit the perspective")]
+    [Range(0, 180)]
     public int spawnAngle = 60;
-
+    [Tooltip("Use this to help tweak the perspective")]
+    [Range(0, 180)]
+    public float spawnAngleOffset;
+    public bool autoChooseOffset = true;
     [Tooltip("This loosely tunes the entire encounter system. Use other variables for finer control")]
     public float difficultyTuner = 1;
 
@@ -46,11 +50,26 @@ public class PlanetController : MonoBehaviour,DamagableObject {
     [Tooltip("How much randomness is in each variable where it makes sense")]
     [Range(0f, 1f)]
     public float randomness = .20f;
+    
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.DrawWireSphere(transform.position, BulletProjectile.cullingDistance);
+    }
+    
     // Start is called before the first frame update
     void Start() {
         health = maxHealth;
-        currentWave = 1;
+        currentWave = 0;
         StartCoroutine(SpawnWave());
+        if (autoChooseOffset)
+        {
+            float offset = (180 - spawnAngle) / 2;
+            if (offset <= 180 && offset >= 0)
+            {
+                spawnAngleOffset = offset;
+            }
+
+        }
     }
 
     // Update is called once per frame
@@ -81,19 +100,29 @@ public class PlanetController : MonoBehaviour,DamagableObject {
         Debug.Log("Spawning Wave");
         foreach(Attack attack in waves[currentWave].Attacks)
         {
-            for(int i = 0; i < attack.AttackNumber; i++)
+            for (int i = 0; i < attack.AttackNumber; i++)
             {
                 GameObject tmp = ProjectilePooling.SharedInstance.GetPooledObject(attack.ProjectileIndex);
-                Vector2 source = (Vector2)transform.position + (spawnRadius * UtilFunctions.DegreeToVector2(i * spawnAngle / attack.AttackNumber));
-                tmp.SetActive(true);
-                tmp.transform.position = source;
-                IShootable shootInterface = tmp.GetComponent<IShootable>();
-                if (shootInterface != null)
-                {
-                    shootInterface.Shoot(10f);
+                var angleVector = UtilFunctions.DegreeToVector2(spawnAngleOffset + (i * spawnAngle / attack.AttackNumber));
+                Vector2 source = (Vector2)transform.position + (spawnRadius * angleVector);
+                //guard against an empty pool
+                if(tmp != null) {
+                    tmp.SetActive(true);
+                    tmp.transform.position = source;
+                    IShootable shootInterface = tmp.GetComponent<IShootable>();
+                    if (shootInterface != null)
+                    {
+                        shootInterface.Shoot(10f, Vector3.zero, (i * spawnAngle / attack.AttackNumber) + spawnAngleOffset);
+                    }
+                    if (attack.AttackDelay == 0)
+                    {
+                        continue;
+                    }
                 }
+
                 yield return new WaitForSeconds(attack.AttackDelay);
             }
+
         }
         yield return new WaitForSeconds(AttackCooldown * Random.Range(1 - randomness, 1 + randomness));
         StartCoroutine(SpawnWave());

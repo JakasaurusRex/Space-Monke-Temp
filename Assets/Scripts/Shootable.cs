@@ -4,7 +4,5 @@ using UnityEngine;
 
 public interface IShootable {
 
-    void Shoot(float speed);
-    void ShootTargeted(float speed, Vector3 target);
-    void ShootAngle(float speed, float launchAngle);
+    void Shoot(float speed, Vector3 target, float launchAngle);
 }

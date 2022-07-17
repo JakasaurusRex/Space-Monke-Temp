@@ -8,22 +8,10 @@ public class BulletProjectile : MonoBehaviour, IShootable
     private bool m_Shooting = false;
     private Vector2 m_Direction;
     private float projSpeed;
-    public void Shoot(float speed)
-    {
-        m_Direction = new Vector2(Random.value, Random.value).normalized;
-        m_Shooting = true;
-        projSpeed = speed;
-    }
 
-    public void ShootAngle(float speed, float launchAngle)
-    {
-        throw new System.NotImplementedException();
-    }
+    //iirc this should make cullingdistance consistent across all bullets
+    public static float cullingDistance = 17;
 
-    public void ShootTargeted(float speed, Vector3 target)
-    {
-        throw new System.NotImplementedException();
-    }
     void OnEnable()
     {
         Invoke("Recycle", 5f);
@@ -36,10 +24,23 @@ public class BulletProjectile : MonoBehaviour, IShootable
         {
             transform.position += (Vector3)m_Direction * Time.deltaTime * projSpeed;
         }
+        if(Vector2.Distance(transform.position, GameObject.FindGameObjectWithTag("ProjectileSource").transform.position) > cullingDistance)
+        {
+            Debug.Log("Culling");
+            CancelInvoke();
+            Recycle();
+        }
     }
 
     void Recycle()
     {
         gameObject.SetActive(false);
+    }
+
+    public void Shoot(float speed, Vector3 target, float launchAngle)
+    {
+        m_Shooting = true;
+        projSpeed = speed;
+        m_Direction = UtilFunctions.DegreeToVector2(launchAngle);
     }
 }
