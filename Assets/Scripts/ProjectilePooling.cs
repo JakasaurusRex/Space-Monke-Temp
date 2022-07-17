@@ -16,10 +16,6 @@ public class ProjectilePooling : MonoBehaviour
     void Awake()
     {
         SharedInstance = this;
-    }
-
-    void Start()
-    {
         //iterate through all projectile types
         for (int i = 0; i < Projectiles.Count; i++)
         {
