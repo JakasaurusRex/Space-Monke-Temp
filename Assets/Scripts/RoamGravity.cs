@@ -1,6 +1,7 @@
 using UnityEngine;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class RoamGravity : MonoBehaviour
@@ -14,14 +15,11 @@ public class RoamGravity : MonoBehaviour
 
     [Tooltip("The range at which a planet will influence the player, increase this for more precise physics at the cost of performance.")]
     public float BodyRange = 5;
-
     [Tooltip("Mass of the ship, tweak this to get better orbits.")]
     public float ShipMass = 1;
-
     private float _currentLaunchAngle = 0f;
     [Tooltip("This makes holding left and right sweep the launch angle faster")]
     public float AngleSensitivity = 1f;
-
     [Tooltip("This affects how fast the ship oscillates between min and max launch power")]
     public float LaunchSweepPeriod = 1;
     [Tooltip("This affects how hard the ship is launched before being scaled by the charge, also affects charge line size")]
@@ -37,7 +35,7 @@ public class RoamGravity : MonoBehaviour
     [SerializeField] private float zeroFudgeFactor = .001f;
     [Tooltip("Tune how sensitive the face direction of movement behavior appears")]
     public float turnSmoothTime = 0.1f;
-
+    [Tooltip("Controls the appearance of several gizmos and lines")]
     public bool DebugMode = false;
     public float DebugKnock = 1;
     private Rigidbody2D _rb;
@@ -47,15 +45,43 @@ public class RoamGravity : MonoBehaviour
     Vector2 directionVector = Vector2.zero;
     private Vector2 myPos;
     private Vector2 lastPos;
-    private float smoothVelocity;
 
+    //input
+    private PlayerControls _playerActions;
+    private float inputAxis = 0;
+    private bool spacebar = false;
     void OnDrawGizmosSelected()
     {
         Gizmos.DrawWireSphere(transform.position, BodyRange);
     }
 
+    private void OnEnable()
+    {
+        _playerActions.LaunchScene.Enable();
+    }
+    void OnDisable()
+    {
+        _playerActions.LaunchScene.Disable();
+    }
+
+    private void Awake()
+    {
+        _playerActions = new PlayerControls();
+    }
+
     void Start()
     {
+        _playerActions.LaunchScene.Launching.performed += context =>
+        {
+            Debug.Log("Spacebar true");
+            spacebar = true;
+        };
+        _playerActions.LaunchScene.Launching.canceled += context =>
+        {
+            Debug.Log("Spacebar false");
+            spacebar = false;
+        };
+
         lastPos = (Vector2)transform.position;
         myPos = (Vector2)transform.position;
         SetupLine(Color.blue, LineWidth, lineMaterial);
@@ -67,16 +93,20 @@ public class RoamGravity : MonoBehaviour
         }
     }
 
-    //can use an Enum and a switch to make this elegant
     void Update()
+
     {
+        UpdateInput();
         myPos = (Vector2)transform.position;
         if (DebugMode)
         {
             Debug.DrawLine(Planet.FindNearest(transform.position).position, transform.position);
         }
         lr.SetPosition(0, transform.position);
-
+        if (spacebar)
+        {
+            Launching = true;
+        }
         //if trying to leave orbit, catch input for launch angle adjustment
         if (Launching)
         {
@@ -92,7 +122,6 @@ public class RoamGravity : MonoBehaviour
                 Debug.Log("Current Launching Angle: " + _currentLaunchAngle);
             }
             lr.SetPosition(1, (UtilFunctions.DegreeToVector2(_currentLaunchAngle) * IndicatorLength) + myPos);
-
             //handle a launch
             HandleLaunch();
         }
@@ -107,10 +136,6 @@ public class RoamGravity : MonoBehaviour
         {
             _rb.velocity = Vector2.zero;
         }
-        if (DebugMode)
-        {
-            Debug.Log("posdif = " + (myPos - lastPos));
-        }
         lastPos = myPos;
     }
 
@@ -119,14 +144,14 @@ public class RoamGravity : MonoBehaviour
         var velVector = myPos - lastPos;
         if (DebugMode)
         {
-                Debug.Log("Updating Bearing");
+            Debug.Log("Updating Bearing");
         }
-        if(_rb.velocity.sqrMagnitude > zeroFudgeFactor)
+        if (_rb.velocity.sqrMagnitude > zeroFudgeFactor)
         {
             transform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(_rb.velocity.y, _rb.velocity.x) * Mathf.Rad2Deg - 90);
         }
     }
-    
+
     private Vector2 CalculateForces()
     {
         //GMM/R^2
@@ -183,10 +208,7 @@ public class RoamGravity : MonoBehaviour
 
     private void UpdateLaunchingAngle()
     {
-        Debug.Log("Updating Launch Angle");
-        var L = Input.GetKey(KeyCode.A);
-        var R = Input.GetKey(KeyCode.D);
-        if ((L && R) || (!L && !R))
+        if (inputAxis == 0)
         {
             return;
         }
@@ -195,7 +217,7 @@ public class RoamGravity : MonoBehaviour
         {
             //if A is held, sweep left, if D is held, sweep right
             Debug.Log("Current angle: " + _currentLaunchAngle);
-            var newAngle = _currentLaunchAngle + (L ? 1 : -1) * Time.deltaTime * AngleSensitivity;
+            var newAngle = _currentLaunchAngle + -inputAxis * Time.deltaTime * AngleSensitivity;
             _currentLaunchAngle = newAngle;
             transform.rotation = (Quaternion.Euler(0, 0, _currentLaunchAngle - 90));
         }
@@ -204,25 +226,27 @@ public class RoamGravity : MonoBehaviour
     private void HandleLaunch()
     {
         Zeroed = true;
-        if (Input.GetKey(KeyCode.Space))
+        //lerp launch from 0-1
+        var wave = Mathf.Cos(Time.time * LaunchSweepPeriod) + 1;
+        var directionVector = UtilFunctions.DegreeToVector2(_currentLaunchAngle).normalized;
+        if (spacebar)
         {
-            //lerp the power back and forth between low and high
-            //sin function from 0-1
-            var wave = Mathf.Cos(Time.time * LaunchSweepPeriod) + 1;
-            var directionVector = UtilFunctions.DegreeToVector2(_currentLaunchAngle);
             lr.SetPosition(1, (IndicatorLength * wave * directionVector) + myPos);
-
         }
-        else if (Input.GetKeyUp(KeyCode.Space))
+        else
         {
             //launch the craft
-            _rb.AddForce(UtilFunctions.DegreeToVector2(_currentLaunchAngle) * LaunchForceScale, ForceMode2D.Impulse);
+            _rb.AddForce(LaunchForceScale * wave * directionVector, ForceMode2D.Impulse);
             //go back to pre launch state and remove indicator
             Launching = Zeroed = prepped = false;
             _launchPowerLine.SetActive(false);
         }
     }
 
+    private void UpdateInput()
+    {
+        inputAxis = _playerActions.LaunchScene.Angling.ReadValue<float>();
+    }
 
     //to manipulate the end of this line, just update the position of the first vertex
     void SetupLine(Color color, float width, Material mat)

@@ -35,6 +35,15 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Launching"",
+                    ""type"": ""Button"",
+                    ""id"": ""17b18ee6-ef63-49d6-956e-c26d915f7f6f"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": ""Press"",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -70,6 +79,17 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""action"": ""Angling"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""e13dd108-2084-4bf0-b60d-b09edbaf9878"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Launching"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -149,6 +169,8 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         // LaunchScene
         m_LaunchScene = asset.FindActionMap("LaunchScene", throwIfNotFound: true);
         m_LaunchScene_Angling = m_LaunchScene.FindAction("Angling", throwIfNotFound: true);
+        m_LaunchScene_Launching = m_LaunchScene.FindAction("Launching", throwIfNotFound: true);
+
         // EncounterScene
         m_EncounterScene = asset.FindActionMap("EncounterScene", throwIfNotFound: true);
         m_EncounterScene_Movement = m_EncounterScene.FindAction("Movement", throwIfNotFound: true);
@@ -213,11 +235,13 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
     private readonly InputActionMap m_LaunchScene;
     private ILaunchSceneActions m_LaunchSceneActionsCallbackInterface;
     private readonly InputAction m_LaunchScene_Angling;
+    private readonly InputAction m_LaunchScene_Launching;
     public struct LaunchSceneActions
     {
         private @PlayerControls m_Wrapper;
         public LaunchSceneActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
         public InputAction @Angling => m_Wrapper.m_LaunchScene_Angling;
+        public InputAction @Launching => m_Wrapper.m_LaunchScene_Launching;
         public InputActionMap Get() { return m_Wrapper.m_LaunchScene; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -230,6 +254,9 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @Angling.started -= m_Wrapper.m_LaunchSceneActionsCallbackInterface.OnAngling;
                 @Angling.performed -= m_Wrapper.m_LaunchSceneActionsCallbackInterface.OnAngling;
                 @Angling.canceled -= m_Wrapper.m_LaunchSceneActionsCallbackInterface.OnAngling;
+                @Launching.started -= m_Wrapper.m_LaunchSceneActionsCallbackInterface.OnLaunching;
+                @Launching.performed -= m_Wrapper.m_LaunchSceneActionsCallbackInterface.OnLaunching;
+                @Launching.canceled -= m_Wrapper.m_LaunchSceneActionsCallbackInterface.OnLaunching;
             }
             m_Wrapper.m_LaunchSceneActionsCallbackInterface = instance;
             if (instance != null)
@@ -237,6 +264,9 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                 @Angling.started += instance.OnAngling;
                 @Angling.performed += instance.OnAngling;
                 @Angling.canceled += instance.OnAngling;
+                @Launching.started += instance.OnLaunching;
+                @Launching.performed += instance.OnLaunching;
+                @Launching.canceled += instance.OnLaunching;
             }
         }
     }
@@ -285,6 +315,7 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
     public interface ILaunchSceneActions
     {
         void OnAngling(InputAction.CallbackContext context);
+        void OnLaunching(InputAction.CallbackContext context);
     }
     public interface IEncounterSceneActions
     {

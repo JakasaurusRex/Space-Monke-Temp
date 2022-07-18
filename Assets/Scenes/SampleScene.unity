@@ -688,15 +688,17 @@ MonoBehaviour:
   ShipMass: 2000
   AngleSensitivity: 150
   LaunchSweepPeriod: 3
-  LaunchForceScale: 10
+  LaunchForceScale: 5
   lineMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   LineWidth: 0.5
   IndicatorLength: 5
-  DebugMode: 1
-  DebugKnock: 8
   _layerMask:
     serializedVersion: 2
     m_Bits: 64
+  zeroFudgeFactor: 0.001
+  turnSmoothTime: 0.1
+  DebugMode: 1
+  DebugKnock: 8
 --- !u!50 &1477542149
 Rigidbody2D:
   serializedVersion: 4
@@ -717,7 +719,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!96 &1477542150
 TrailRenderer:
   serializedVersion: 2
@@ -760,7 +762,7 @@ TrailRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Time: 300
+  m_Time: 1
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 1
