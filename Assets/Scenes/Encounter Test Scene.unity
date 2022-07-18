@@ -130,8 +130,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6841752124072165505, guid: 80cabe052d375fe46b994c2afbb4f90f, type: 3}
+      propertyPath: m_Constraints
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 6841752124072165509, guid: 80cabe052d375fe46b994c2afbb4f90f, type: 3}
       propertyPath: m_Name
+      value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 6841752124072165509, guid: 80cabe052d375fe46b994c2afbb4f90f, type: 3}
+      propertyPath: m_TagString
       value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 6841752124072165510, guid: 80cabe052d375fe46b994c2afbb4f90f, type: 3}
@@ -315,7 +323,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fireRate: 0.2
   firingPoint: {fileID: 1554160014}
-  bulletPrefab: {fileID: 8329509143499132741, guid: e89466607c10b614abab72fe50804a46, type: 3}
+  bulletPrefab: {fileID: 8329509143499132741, guid: 9f033cb3e1f22204ab0ba5746b3a987e, type: 3}
 --- !u!4 &1514034825 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6841752123628679357, guid: 80cabe052d375fe46b994c2afbb4f90f, type: 3}
@@ -363,6 +371,7 @@ GameObject:
   - component: {fileID: 1784798285}
   - component: {fileID: 1784798284}
   - component: {fileID: 1784798283}
+  - component: {fileID: 1784798286}
   m_Layer: 0
   m_Name: Planet
   m_TagString: ProjectileSource
@@ -480,6 +489,22 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!58 &1784798286
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1784798282}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
+  m_Radius: 0.5
 --- !u!1 &1859466037
 GameObject:
   m_ObjectHideFlags: 0

@@ -31,6 +31,8 @@
       <option value="$PROJECT_DIR$/Assets/Scripts/Player.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/Shooting.cs" />
       <option value="$PROJECT_DIR$/Assets/Scripts/PlayerShoot.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/BulletProjectile.cs" />
+      <option value="$PROJECT_DIR$/Assets/Scripts/Bullet.cs" />
     </changedPaths>
   </component>
   <component name="ProjectId" id="2BsAN0ifgjVbzDKqf3XyYugSoo5" />
@@ -81,7 +83,7 @@
       <workItem from="1657779407952" duration="2473000" />
       <workItem from="1658081905771" duration="4132000" />
       <workItem from="1658090694479" duration="12000" />
-      <workItem from="1658090768376" duration="3344000" />
+      <workItem from="1658090768376" duration="7109000" />
     </task>
     <servers />
   </component>
