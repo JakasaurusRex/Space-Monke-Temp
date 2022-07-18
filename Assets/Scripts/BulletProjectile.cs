@@ -8,6 +8,7 @@ public class BulletProjectile : MonoBehaviour, IShootable
     private bool m_Shooting = false;
     private Vector2 m_Direction;
     private float projSpeed;
+    
 
     //iirc this should make cullingdistance consistent across all bullets
     public static float cullingDistance = 17;

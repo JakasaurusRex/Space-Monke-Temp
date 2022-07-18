@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEditor.UI;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class Player : MonoBehaviour {
     
@@ -16,9 +17,23 @@ public class Player : MonoBehaviour {
     public float minClamp;
     public float maxClamp;
 
+    private PlayerControls _playerActions;
+
     //Facing towards the planet
     public float rotationModifier;
     public float rotSpeed;
+
+    
+    private void Awake() {
+        _playerActions = new PlayerControls();
+    }
+
+    private void OnEnable() {
+        _playerActions.EncounterScene.Enable();
+    }
+    private void OnDisable() {
+        _playerActions.EncounterScene.Disable();
+    }
 
     private void Start() {
         angleAroundPlanet = 90;
@@ -26,7 +41,8 @@ public class Player : MonoBehaviour {
 
     void Update() {
         //Player movement
-        movement = Input.GetAxisRaw("Horizontal");
+        movement = _playerActions.EncounterScene.Movement.ReadValue<float>();
+        Debug.Log(movement);
         angleAroundPlanet = Mathf.Clamp(angleAroundPlanet + movement * Time.deltaTime * -movementSpeed, minClamp, maxClamp);
         Vector3 pos = (radius * UtilFunctions.DegreeToVector2(angleAroundPlanet));
         transform.position = pos + planet.position;

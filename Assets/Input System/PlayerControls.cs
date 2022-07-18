@@ -92,6 +92,76 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""EncounterScene"",
+            ""id"": ""63565bf2-44e2-4e2d-abd1-3ccf62810ece"",
+            ""actions"": [
+                {
+                    ""name"": ""Movement"",
+                    ""type"": ""Value"",
+                    ""id"": ""0d8892a2-de2b-4631-92a8-0e3d3d2ecf21"",
+                    ""expectedControlType"": ""Axis"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""Shoot"",
+                    ""type"": ""Value"",
+                    ""id"": ""638b232b-0baf-4f45-afd7-9ce26fb54032"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": ""1D Axis"",
+                    ""id"": ""2eaae2a6-4e17-490d-a5e0-b52c470d529b"",
+                    ""path"": ""1DAxis"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Movement"",
+                    ""isComposite"": true,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": ""negative"",
+                    ""id"": ""0678d126-78a7-4b2e-b14f-b3732a15e027"",
+                    ""path"": ""<Keyboard>/leftArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""positive"",
+                    ""id"": ""203ecd14-c7e9-494d-b3ca-63dccff91ed7"",
+                    ""path"": ""<Keyboard>/rightArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Movement"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""79c85006-258c-4e0c-bab7-1c34eb03ec44"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Shoot"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -100,6 +170,11 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         m_LaunchScene = asset.FindActionMap("LaunchScene", throwIfNotFound: true);
         m_LaunchScene_Angling = m_LaunchScene.FindAction("Angling", throwIfNotFound: true);
         m_LaunchScene_Launching = m_LaunchScene.FindAction("Launching", throwIfNotFound: true);
+
+        // EncounterScene
+        m_EncounterScene = asset.FindActionMap("EncounterScene", throwIfNotFound: true);
+        m_EncounterScene_Movement = m_EncounterScene.FindAction("Movement", throwIfNotFound: true);
+        m_EncounterScene_Shoot = m_EncounterScene.FindAction("Shoot", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -196,9 +271,55 @@ public partial class @PlayerControls : IInputActionCollection2, IDisposable
         }
     }
     public LaunchSceneActions @LaunchScene => new LaunchSceneActions(this);
+
+    // EncounterScene
+    private readonly InputActionMap m_EncounterScene;
+    private IEncounterSceneActions m_EncounterSceneActionsCallbackInterface;
+    private readonly InputAction m_EncounterScene_Movement;
+    private readonly InputAction m_EncounterScene_Shoot;
+    public struct EncounterSceneActions
+    {
+        private @PlayerControls m_Wrapper;
+        public EncounterSceneActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
+        public InputAction @Movement => m_Wrapper.m_EncounterScene_Movement;
+        public InputAction @Shoot => m_Wrapper.m_EncounterScene_Shoot;
+        public InputActionMap Get() { return m_Wrapper.m_EncounterScene; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(EncounterSceneActions set) { return set.Get(); }
+        public void SetCallbacks(IEncounterSceneActions instance)
+        {
+            if (m_Wrapper.m_EncounterSceneActionsCallbackInterface != null)
+            {
+                @Movement.started -= m_Wrapper.m_EncounterSceneActionsCallbackInterface.OnMovement;
+                @Movement.performed -= m_Wrapper.m_EncounterSceneActionsCallbackInterface.OnMovement;
+                @Movement.canceled -= m_Wrapper.m_EncounterSceneActionsCallbackInterface.OnMovement;
+                @Shoot.started -= m_Wrapper.m_EncounterSceneActionsCallbackInterface.OnShoot;
+                @Shoot.performed -= m_Wrapper.m_EncounterSceneActionsCallbackInterface.OnShoot;
+                @Shoot.canceled -= m_Wrapper.m_EncounterSceneActionsCallbackInterface.OnShoot;
+            }
+            m_Wrapper.m_EncounterSceneActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                @Movement.started += instance.OnMovement;
+                @Movement.performed += instance.OnMovement;
+                @Movement.canceled += instance.OnMovement;
+                @Shoot.started += instance.OnShoot;
+                @Shoot.performed += instance.OnShoot;
+                @Shoot.canceled += instance.OnShoot;
+            }
+        }
+    }
+    public EncounterSceneActions @EncounterScene => new EncounterSceneActions(this);
     public interface ILaunchSceneActions
     {
         void OnAngling(InputAction.CallbackContext context);
         void OnLaunching(InputAction.CallbackContext context);
+    }
+    public interface IEncounterSceneActions
+    {
+        void OnMovement(InputAction.CallbackContext context);
+        void OnShoot(InputAction.CallbackContext context);
     }
 }
